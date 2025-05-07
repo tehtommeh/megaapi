@@ -35,6 +35,32 @@ services:
     ports:
       - "9001:8000"
 
+  addition2:
+    build: ./subprojects/addition
+    container_name: addition2
+    ports:
+      - "8004:8000"
+    depends_on:
+      - rabbitmq
+    environment:
+      - PYTHONUNBUFFERED=1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  addition2_popper:
+    build: ./subprojects/proxy_popper
+    container_name: addition2_popper
+    depends_on:
+      - rabbitmq
+      - addition2
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - SERVICE_NAME=addition
+      - DOWNSTREAM_URL=http://addition2:8000/add
+    ports:
+      - "9004:8000"
+
   subtraction:
     build: ./subprojects/subtraction
     container_name: subtraction
