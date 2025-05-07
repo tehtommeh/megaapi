@@ -1,16 +1,65 @@
 version: '3.8'
 services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
   addition:
     build: ./subprojects/addition
     container_name: addition
     ports:
       - "8001:8000"
+    depends_on:
+      - rabbitmq
+    environment:
+      - PYTHONUNBUFFERED=1
+    # Addition popper sidecar
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  addition_popper:
+    build: ./subprojects/proxy_popper
+    container_name: addition_popper
+    depends_on:
+      - rabbitmq
+      - addition
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - SERVICE_NAME=addition
+      - DOWNSTREAM_URL=http://addition:8000/add
+    # Optional: expose for debugging
+    ports:
+      - "9001:8000"
 
   subtraction:
     build: ./subprojects/subtraction
     container_name: subtraction
     ports:
       - "8002:8000"
+    depends_on:
+      - rabbitmq
+    environment:
+      - PYTHONUNBUFFERED=1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  subtraction_popper:
+    build: ./subprojects/proxy_popper
+    container_name: subtraction_popper
+    depends_on:
+      - rabbitmq
+      - subtraction
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - SERVICE_NAME=subtraction
+      - DOWNSTREAM_URL=http://subtraction:8000/subtract
+    ports:
+      - "9002:8000"
 
   api:
     build: ./subprojects/api
@@ -18,7 +67,23 @@ services:
     depends_on:
       - addition
       - subtraction
+      - proxy_pusher
     ports:
       - "8000:8000"
     environment:
-      - PYTHONUNBUFFERED=1 
+      - PYTHONUNBUFFERED=1
+      - ADDITION_URL=http://proxy_pusher:8000/proxy/addition
+      - SUBTRACTION_URL=http://proxy_pusher:8000/proxy/subtraction
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  proxy_pusher:
+    build: ./subprojects/proxy_pusher
+    container_name: proxy_pusher
+    depends_on:
+      - rabbitmq
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+    ports:
+      - "9100:8000" 
