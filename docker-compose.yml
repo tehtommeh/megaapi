@@ -1,0 +1,24 @@
+version: '3.8'
+services:
+  addition:
+    build: ./subprojects/addition
+    container_name: addition
+    ports:
+      - "8001:8000"
+
+  subtraction:
+    build: ./subprojects/subtraction
+    container_name: subtraction
+    ports:
+      - "8002:8000"
+
+  api:
+    build: ./subprojects/api
+    container_name: api
+    depends_on:
+      - addition
+      - subtraction
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1 
