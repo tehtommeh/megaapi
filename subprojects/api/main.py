@@ -6,8 +6,10 @@ import os
 import io
 import tarfile
 import asyncio
+from prometheus_fastapi_instrumentator import Instrumentator
 
 app = FastAPI()
+Instrumentator().instrument(app).expose(app)
 
 class CalculateRequest(BaseModel):
     x: float
@@ -45,7 +47,7 @@ def calculate(request: CalculateRequest):
 @app.post("/split-hash")
 async def split_and_hash(file: UploadFile = File(...)):
     # Step 1: Call file_splitter to split into 10MB chunks
-    ten_mb = 10 * 1024 * 1024
+    ten_mb = 1 * 1024 * 1024
     file.file.seek(0)
     files = {"file": (file.filename, file.file, file.content_type)}
     data = {"size": str(ten_mb)}

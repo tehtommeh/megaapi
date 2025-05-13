@@ -1,4 +1,5 @@
 fastapi
 uvicorn
 httpx
-python-multipart 
+python-multipart
+prometheus-fastapi-instrumentator 

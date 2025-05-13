@@ -1,7 +1,9 @@
 from fastapi import FastAPI, File, UploadFile
 import hashlib
+from prometheus_fastapi_instrumentator import Instrumentator
 
 app = FastAPI()
+Instrumentator().instrument(app).expose(app)
 
 @app.post("/hash")
 def hash_file(file: UploadFile = File(...)):

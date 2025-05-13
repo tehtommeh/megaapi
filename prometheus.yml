@@ -1,0 +1,24 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: 'api'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['api:8000']
+  - job_name: 'addition'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['addition:8000']
+  - job_name: 'subtraction'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['subtraction:8000']
+  - job_name: 'file_splitter'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['file_splitter:8000']
+  - job_name: 'file_hasher'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['file_hasher:8000'] 

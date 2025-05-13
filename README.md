@@ -34,3 +34,17 @@ You can override the addition and subtraction service URLs for the `api` service
 ---
 
 Each subproject also contains its own README with standalone run instructions if you want to run them individually.
+
+---
+
+## Observability: Prometheus & Grafana
+
+This project includes built-in observability using Prometheus and Grafana. All FastAPI services expose Prometheus-compatible metrics at `/metrics`.
+
+- **Prometheus** is available at: [http://localhost:9090](http://localhost:9090)
+- **Grafana** is available at: [http://localhost:3001](http://localhost:3001)
+    - **Default login:**
+        - Username: `admin`
+        - Password: `admin`
+
+Prometheus is pre-configured to scrape all API and processor services for metrics. You can use Grafana to visualize metrics and create dashboards for request rates, latencies, and more.

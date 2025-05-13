@@ -2,8 +2,10 @@ from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.responses import StreamingResponse
 import io
 import tarfile
+from prometheus_fastapi_instrumentator import Instrumentator
 
 app = FastAPI()
+Instrumentator().instrument(app).expose(app)
 
 @app.post("/split")
 def split_file(file: UploadFile = File(...), size: int = Form(...)):
