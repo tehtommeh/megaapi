@@ -87,6 +87,26 @@ services:
     ports:
       - "9002:8000"
 
+  file_splitter:
+    build: ./subprojects/file_splitter
+    container_name: file_splitter
+    ports:
+      - "8010:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  file_hasher:
+    build: ./subprojects/file_hasher
+    container_name: file_hasher
+    ports:
+      - "8011:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
   api:
     build: ./subprojects/api
     container_name: api
@@ -94,12 +114,16 @@ services:
       - addition
       - subtraction
       - proxy_pusher
+      - file_splitter
+      - file_hasher
     ports:
       - "8000:8000"
     environment:
       - PYTHONUNBUFFERED=1
       - ADDITION_URL=http://proxy_pusher:8000/proxy/addition
       - SUBTRACTION_URL=http://proxy_pusher:8000/proxy/subtraction
+      - FILE_SPLITTER_URL=http://file_splitter:8000/split
+      - FILE_HASHER_URL=http://file_hasher:8000/hash
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
