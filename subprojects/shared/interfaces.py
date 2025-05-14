@@ -1,9 +1,15 @@
 from pydantic import BaseModel
 
 class SubtractionRequest(BaseModel):
-    a: int
-    b: int
+    a: float
+    b: float
 
 class SubtractionResponse(BaseModel):
-    result: int
-    
+    result: float
+
+class AdditionRequest(BaseModel):
+    a: float
+    b: float
+
+class AdditionResponse(BaseModel):
+    result: float

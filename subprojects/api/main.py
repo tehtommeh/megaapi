@@ -1,3 +1,4 @@
+from typing import Type
 from fastapi import FastAPI, File, UploadFile
 from pydantic import BaseModel
 import httpx
@@ -7,7 +8,7 @@ import io
 import tarfile
 import asyncio
 from prometheus_fastapi_instrumentator import Instrumentator
-from shared.interfaces import SubtractionResponse
+from shared.interfaces import SubtractionRequest, SubtractionResponse, AdditionRequest, AdditionResponse
 
 app = FastAPI()
 Instrumentator().instrument(app).expose(app)
@@ -20,30 +21,34 @@ SUBTRACTION_URL = os.getenv("SUBTRACTION_URL", "http://subtraction:8000/subtract
 FILE_SPLITTER_URL = os.getenv("FILE_SPLITTER_URL", "http://file_splitter:8000/split")
 FILE_HASHER_URL = os.getenv("FILE_HASHER_URL", "http://file_hasher:8000/hash")
 
+async def _call_endpoint(url: str, request: BaseModel, response_type: Type[BaseModel]) -> BaseModel:
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(url, json=request.model_dump())
+        resp.raise_for_status()
+        return response_type.model_validate(resp.json())
+
+async def call_addition(a: float, b: float) -> float:
+    r: AdditionResponse = await _call_endpoint(ADDITION_URL, AdditionRequest(a=a, b=b), AdditionResponse)
+    return r.result
+
+async def call_subtraction(a: float, b: float) -> float:
+    r: SubtractionResponse = await _call_endpoint(SUBTRACTION_URL, SubtractionRequest(a=a, b=b), SubtractionResponse)
+    return r.result
+
 @app.post("/calculate")
-def calculate(request: CalculateRequest):
+async def calculate(request: CalculateRequest):
     x = request.x
     add_rand = random.uniform(1, 10)
     sub_rand = random.uniform(1, 10)
     
-    # Call addition service
-    with httpx.Client() as client:
-        add_resp = client.post(ADDITION_URL, json={"a": x, "b": add_rand})
-        add_resp.raise_for_status()
-        added = add_resp.json()["result"]
-    
-    # Call subtraction service
-    with httpx.Client() as client:
-        b = SubtractionResponse(a=added, b=sub_rand)
-        sub_resp = client.post(SUBTRACTION_URL, json=b)
-        sub_resp.raise_for_status()
-        result = sub_resp.json()["result"]
+    added: float = await call_addition(a=x, b=add_rand)
+    subtracted: float = await call_subtraction(a=added, b=sub_rand)
     
     return {
         "initial": x,
         "added_random": add_rand,
         "subtracted_random": sub_rand,
-        "result": result
+        "result": subtracted
     }
 
 @app.post("/split-hash")

@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   rabbitmq:
     image: rabbitmq:3-management
@@ -8,7 +7,11 @@ services:
       - "15672:15672"
 
   addition:
-    build: ./subprojects/addition
+    build:
+      context: ./subprojects/addition
+      dockerfile: Dockerfile
+      additional_contexts:
+        - shared=subprojects/shared
     container_name: addition
     ports:
       - "8001:8000"
@@ -35,34 +38,12 @@ services:
     ports:
       - "9001:8000"
 
-  addition2:
-    build: ./subprojects/addition
-    container_name: addition2
-    ports:
-      - "8004:8000"
-    depends_on:
-      - rabbitmq
-    environment:
-      - PYTHONUNBUFFERED=1
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-
-  addition2_popper:
-    build: ./subprojects/proxy_popper
-    container_name: addition2_popper
-    depends_on:
-      - rabbitmq
-      - addition2
-    environment:
-      - RABBITMQ_HOST=rabbitmq
-      - RABBITMQ_PORT=5672
-      - SERVICE_NAME=addition
-      - DOWNSTREAM_URL=http://addition2:8000/add
-    ports:
-      - "9004:8000"
-
   subtraction:
-    build: ./subprojects/subtraction
+    build:
+      context: ./subprojects/subtraction
+      dockerfile: Dockerfile
+      additional_contexts:
+        - shared=subprojects/shared
     container_name: subtraction
     ports:
       - "8002:8000"
@@ -88,7 +69,11 @@ services:
       - "9002:8000"
 
   file_splitter:
-    build: ./subprojects/file_splitter
+    build:
+      context: ./subprojects/file_splitter
+      dockerfile: Dockerfile
+      additional_contexts:
+        - shared=subprojects/shared
     container_name: file_splitter
     ports:
       - "8010:8000"
@@ -98,7 +83,11 @@ services:
       - "host.docker.internal:host-gateway"
 
   file_hasher:
-    build: ./subprojects/file_hasher
+    build:
+      context: ./subprojects/file_hasher
+      dockerfile: Dockerfile
+      additional_contexts:
+        - shared=subprojects/shared
     container_name: file_hasher
     ports:
       - "8011:8000"
@@ -108,7 +97,11 @@ services:
       - "host.docker.internal:host-gateway"
 
   api:
-    build: ./subprojects/api
+    build:
+      context: ./subprojects/api
+      dockerfile: Dockerfile
+      additional_contexts:
+        - shared=subprojects/shared
     container_name: api
     depends_on:
       - addition
