@@ -7,6 +7,7 @@ import io
 import tarfile
 import asyncio
 from prometheus_fastapi_instrumentator import Instrumentator
+from shared.interfaces import SubtractionResponse
 
 app = FastAPI()
 Instrumentator().instrument(app).expose(app)
@@ -33,7 +34,8 @@ def calculate(request: CalculateRequest):
     
     # Call subtraction service
     with httpx.Client() as client:
-        sub_resp = client.post(SUBTRACTION_URL, json={"a": added, "b": sub_rand})
+        b = SubtractionResponse(a=added, b=sub_rand)
+        sub_resp = client.post(SUBTRACTION_URL, json=b)
         sub_resp.raise_for_status()
         result = sub_resp.json()["result"]
     
@@ -74,3 +76,7 @@ async def split_and_hash(file: UploadFile = File(...)):
                 tasks.append(hash_part(part_bytes))
         hashes = await asyncio.gather(*tasks)
     return {"result": hashes} 
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
