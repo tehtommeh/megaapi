@@ -1,11 +1,7 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from prometheus_fastapi_instrumentator import Instrumentator
+from shared.api import get_app
 from shared.interfaces import AdditionRequest, AdditionResponse
 
-app = FastAPI()
-Instrumentator().instrument(app).expose(app)
-
+app = get_app()
 
 @app.post("/add")
 def add_numbers(request: AdditionRequest) -> AdditionResponse:

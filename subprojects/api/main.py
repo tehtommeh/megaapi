@@ -1,5 +1,5 @@
 from typing import Type
-from fastapi import FastAPI, File, UploadFile
+from fastapi import File, UploadFile
 from pydantic import BaseModel
 import httpx
 import random
@@ -7,11 +7,10 @@ import os
 import io
 import tarfile
 import asyncio
-from prometheus_fastapi_instrumentator import Instrumentator
+from shared.api import get_app
 from shared.interfaces import SubtractionRequest, SubtractionResponse, AdditionRequest, AdditionResponse
 
-app = FastAPI()
-Instrumentator().instrument(app).expose(app)
+app = get_app()
 
 class CalculateRequest(BaseModel):
     x: float
