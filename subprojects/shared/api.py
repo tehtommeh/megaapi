@@ -12,6 +12,8 @@ import pickle
 # Create a Redis connection pool at module level
 redis_pool = redis.ConnectionPool(host='redis', port=6379, decode_responses=False)
 
+# Set to keep strong references to background tasks
+background_tasks = set()
 
 @lru_cache
 def get_app() -> FastAPI:
@@ -62,7 +64,14 @@ def get_app() -> FastAPI:
                         await redis_client.set(job_id, pickle.dumps(response_data))
                         await redis_client.close()
 
-            asyncio.create_task(process_request())
+            task = asyncio.create_task(process_request())
+            
+            # Add the task to the set to keep it alive
+            # This is necessary because the task will be garbage collected if not kept alive
+            # https://docs.python.org/3/library/asyncio-task.html#creating-tasks
+            background_tasks.add(task)
+            task.add_done_callback(background_tasks.discard)
+            
             return JSONResponse(content={"job_id": job_id})
 
         return await call_next(request)
