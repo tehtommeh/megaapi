@@ -34,6 +34,7 @@ def get_app() -> FastAPI:
             url = str(request.url)
             headers = dict(request.headers)
             headers.pop("x-async-request", None)  # Remove async header to avoid recursion
+            webhook_url = headers.pop("x-async-webhook-url", None)
 
             async def process_request():
                 async with httpx.AsyncClient() as client:
@@ -43,16 +44,23 @@ def get_app() -> FastAPI:
                         content=body,
                         headers=headers,
                     )
-                    # Store only the response content and status code
                     response_data = {
                         'content': response.content,
                         'status_code': response.status_code,
                         'headers': dict(response.headers)
                     }
-                    # Use Redis connection pool
-                    redis_client = redis.Redis(connection_pool=redis_pool)
-                    await redis_client.set(job_id, pickle.dumps(response_data))
-                    await redis_client.close()
+                    if webhook_url:
+                        # POST the result to the webhook URL
+                        await client.post(
+                            webhook_url,
+                            content=response.content,
+                            headers={**response_data['headers'], 'X-Async-Job-Id': job_id}
+                        )
+                    else:
+                        # Use Redis connection pool
+                        redis_client = redis.Redis(connection_pool=redis_pool)
+                        await redis_client.set(job_id, pickle.dumps(response_data))
+                        await redis_client.close()
 
             asyncio.create_task(process_request())
             return JSONResponse(content={"job_id": job_id})

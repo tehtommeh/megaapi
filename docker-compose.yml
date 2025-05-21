@@ -137,6 +137,12 @@ services:
     ports:
       - "6379:6379"
 
+  httpbin:
+    image: ghcr.io/mccutchen/go-httpbin
+    container_name: httpbin
+    ports:
+      - "8080:8080"
+
   prometheus:
     image: prom/prometheus
     container_name: prometheus
