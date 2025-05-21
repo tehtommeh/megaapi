@@ -7,7 +7,7 @@ from shared.api import get_app
 app = get_app()
 
 @app.post("/split")
-def split_file(file: UploadFile = File(...), size: int = Form(...)):
+async def split_file(file: UploadFile = File(...), size: int = Form(...)):
     # Read the file into memory
     file_bytes = file.file.read()
     parts = [file_bytes[i:i+size] for i in range(0, len(file_bytes), size)]

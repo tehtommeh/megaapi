@@ -23,7 +23,7 @@ def load_model():
 asr_model = load_model()
 
 @app.post("/transcribe")
-def transcribe_audio(file: UploadFile = File(...)):
+async def transcribe_audio(file: UploadFile = File(...)):
     # Save uploaded file to a temp file
     with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[-1]) as tmp:
         shutil.copyfileobj(file.file, tmp)

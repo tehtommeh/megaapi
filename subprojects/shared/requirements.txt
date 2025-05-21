@@ -1,3 +1,5 @@
 pydantic
 prometheus-fastapi-instrumentator
 fastapi
+redis
+httpx

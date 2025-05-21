@@ -130,6 +130,12 @@ services:
       - RABBITMQ_PORT=5672
     ports:
       - "9100:8000"
+  
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
 
   prometheus:
     image: prom/prometheus
