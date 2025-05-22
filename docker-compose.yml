@@ -68,6 +68,36 @@ services:
     ports:
       - "9002:8000"
 
+  wait:
+    build:
+      context: ./subprojects/wait
+      dockerfile: Dockerfile
+      additional_contexts:
+        - shared=subprojects/shared
+    container_name: wait
+    ports:
+      - "8003:8000"
+    depends_on:
+      - rabbitmq
+    environment:
+      - PYTHONUNBUFFERED=1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  wait_popper:
+    build: ./subprojects/proxy_popper
+    container_name: wait_popper
+    depends_on:
+      - rabbitmq
+      - wait
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - SERVICE_NAME=wait
+      - DOWNSTREAM_URL=http://wait:8000/wait
+    ports:
+      - "9003:8000"
+
   file_splitter:
     build:
       context: ./subprojects/file_splitter
@@ -106,6 +136,7 @@ services:
     depends_on:
       - addition
       - subtraction
+      - wait
       - proxy_pusher
       - file_splitter
       - file_hasher
@@ -115,6 +146,7 @@ services:
       - PYTHONUNBUFFERED=1
       - ADDITION_URL=http://proxy_pusher:8000/proxy/addition
       - SUBTRACTION_URL=http://proxy_pusher:8000/proxy/subtraction
+      - WAIT_URL=http://proxy_pusher:8000/proxy/wait
       - FILE_SPLITTER_URL=http://file_splitter:8000/split
       - FILE_HASHER_URL=http://file_hasher:8000/hash
     extra_hosts:

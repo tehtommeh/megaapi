@@ -45,6 +45,7 @@ def get_app() -> FastAPI:
                         url,
                         content=body,
                         headers=headers,
+                        timeout=60
                     )
                     response_data = {
                         'content': response.content,

@@ -13,3 +13,11 @@ class AdditionRequest(BaseModel):
 
 class AdditionResponse(BaseModel):
     result: float
+
+class WaitRequest(BaseModel):
+    wait_time: float
+
+class WaitResponse(BaseModel):
+    waited: bool
+    start_time: str
+    end_time: str

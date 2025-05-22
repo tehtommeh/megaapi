@@ -8,7 +8,7 @@ import io
 import tarfile
 import asyncio
 from shared.api import get_app
-from shared.interfaces import SubtractionRequest, SubtractionResponse, AdditionRequest, AdditionResponse
+from shared.interfaces import SubtractionRequest, SubtractionResponse, AdditionRequest, AdditionResponse, WaitRequest, WaitResponse
 
 app = get_app()
 
@@ -19,10 +19,11 @@ ADDITION_URL = os.getenv("ADDITION_URL", "http://addition:8000/add")
 SUBTRACTION_URL = os.getenv("SUBTRACTION_URL", "http://subtraction:8000/subtract")
 FILE_SPLITTER_URL = os.getenv("FILE_SPLITTER_URL", "http://file_splitter:8000/split")
 FILE_HASHER_URL = os.getenv("FILE_HASHER_URL", "http://file_hasher:8000/hash")
+WAIT_URL = os.getenv("WAIT_URL", "http://wait:8000/wait")
 
 async def _call_endpoint(url: str, request: BaseModel, response_type: Type[BaseModel]) -> BaseModel:
     async with httpx.AsyncClient() as client:
-        resp = await client.post(url, json=request.model_dump())
+        resp = await client.post(url, json=request.model_dump(), timeout=60)
         resp.raise_for_status()
         return response_type.model_validate(resp.json())
 
@@ -33,6 +34,10 @@ async def call_addition(a: float, b: float) -> float:
 async def call_subtraction(a: float, b: float) -> float:
     r: SubtractionResponse = await _call_endpoint(SUBTRACTION_URL, SubtractionRequest(a=a, b=b), SubtractionResponse)
     return r.result
+
+async def call_wait(wait_time: float) -> float:
+    r: WaitResponse = await _call_endpoint(WAIT_URL, WaitRequest(wait_time=wait_time), WaitResponse)
+    return r
 
 @app.post("/calculate")
 async def calculate(request: CalculateRequest):
@@ -49,6 +54,11 @@ async def calculate(request: CalculateRequest):
         "subtracted_random": sub_rand,
         "result": subtracted
     }
+
+@app.post("/wait")
+async def wait(request: WaitRequest):
+    wr: WaitResponse = await call_wait(request.wait_time)
+    return wr
 
 @app.post("/split-hash")
 async def split_and_hash(file: UploadFile = File(...)):
